@@ -1,0 +1,43 @@
+pipeline {
+    agent any
+
+    environment {
+        DOTNET_ROOT = tool name: 'dotnet', type: 'DotNetSDK'
+    }
+
+    stages {
+        stage('Restore') {
+            steps {
+                echo 'Restaurando pacotes NuGet...'
+                sh 'dotnet restore ProductApi.sln'
+            }
+        }
+
+        stage('Build') {
+            steps {
+                echo 'Compilando solução...'
+                sh 'dotnet build ProductApi.sln --configuration Release --no-restore'
+            }
+        }
+
+        stage('Test') {
+            steps {
+                echo 'Executando testes unitários...'
+                sh 'dotnet test ProductApi.sln --no-build --logger trx'
+            }
+        }
+
+        stage('Publish') {
+            steps {
+                echo 'Publicando API para pasta ./publish...'
+                sh 'dotnet publish ProductApi/ProductApi.csproj -c Release -o ./publish'
+            }
+        }
+    }
+
+    post {
+        always {
+            echo 'Pipeline finalizado.'
+        }
+    }
+}
